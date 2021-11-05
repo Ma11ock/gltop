@@ -22,17 +22,22 @@ extern "C" {
 #include <cctype>
 
 // Global constants.
-constexpr char WINDOW_TITLE[] = "gltop";
-constexpr GLfloat BACKCOLOR[] = { 0.f, 0.f, 0.f, 1.f };
-constexpr char ESCAPE = 0x1b;
-constexpr GLfloat PI = 3.14159265359f;
+constexpr char WINDOW_TITLE[] = "gltop";      // Name of window.
+constexpr GLfloat BACKCOLOR[] = { 0.f, 0.f, 0.f, 1.f }; // Reset color.
+constexpr char ESCAPE = 0x1b;                 // ESCAPE key code.
+constexpr GLfloat PI = 3.14159265359f;        // PI.
+constexpr int DEFAULT_WINDOW_WIDTH = 1200;    // Initial window width.
+constexpr int DEFAULT_WINDOW_HEIGHT = 800;    // Initial window height.
 
 // Utility functions:
+
+// Convert degrees to radians.
 inline GLfloat deg2rad(GLfloat x)
 {
     return x * PI / 180;
 }
 
+// Create a mt19937 random number generator with a good seed.
 template<class T = std::mt19937,
          std::size_t N = T::state_size * sizeof(typename T::result_type)>
 inline auto seededMT () -> typename std::enable_if<N, T>::type
@@ -48,6 +53,7 @@ inline auto seededMT () -> typename std::enable_if<N, T>::type
 // Global variables.
 static std::mt19937 rng = seededMT();       // RNG. 
 static int mainWindow = 0;                  // Glut window.
+
 
 // Callback functions:
 
@@ -217,6 +223,7 @@ int main(int argc, char *argv[])
     // Initialize graphics.
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
     glutInitWindowPosition(0, 0);
+    glutInitWindowSize(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
 
     mainWindow = glutCreateWindow(WINDOW_TITLE);
     glutSetWindowTitle(WINDOW_TITLE);
@@ -236,9 +243,8 @@ int main(int argc, char *argv[])
     glutSpecialFunc(handleSpecialKeyboard);
     // Unused callbacks.
     glutEntryFunc(nullptr);
-    glutSpecialFunc(nullptr);
     glutSpaceballMotionFunc(nullptr);
-	glutSpaceballRotateFunc(nullptr);
+	glutSpaceballRotateFunc(nullptr)
 	glutSpaceballButtonFunc(nullptr);
 	glutButtonBoxFunc(nullptr);
 	glutDialsFunc(nullptr);
