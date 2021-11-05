@@ -15,6 +15,3 @@ project(gltop)
 
 add_subdirectory(src)
 
-if(GLTOP_TESTS AND NOT EMATHS_NO_TESTS)
-  add_subdirectory(test)
-endif()
