@@ -2,11 +2,6 @@
 extern "C" {
 #include <GL/glew.h>
 #include <GL/freeglut.h>
-#include <unistd.h>
-#include <sys/resource.h>
-#include <sys/types.h>
-#include <proc/procps.h>
-#include <proc/readproc.h>
 }
 
 #include <string>
@@ -20,6 +15,9 @@ extern "C" {
 #include <algorithm>
 #include <glm/glm.hpp>
 #include <cctype>
+#include <cstdlib>
+
+#include "gltop.hpp"
 
 // Global constants.
 constexpr char WINDOW_TITLE[] = "gltop";      // Name of window.
@@ -53,7 +51,20 @@ inline auto seededMT () -> typename std::enable_if<N, T>::type
 // Global variables.
 static std::mt19937 rng = seededMT();       // RNG. 
 static int mainWindow = 0;                  // Glut window.
+static std::vector<std::string> args;       // Argument vector.
 
+// General Functions.
+
+static void getProcesses()
+{
+    for(auto proc = gltop::Process::GetNextProcess(); proc;
+        proc = gltop::Process::GetNextProcess())
+    {
+        auto argv = proc.getArgv();
+        std::string nameStr = argv.size() ? argv[0] : "";
+        std::cout << nameStr << ' ' << proc.getTID() << '\n';
+    }
+}
 
 // Callback functions:
 
@@ -71,9 +82,10 @@ static void handleDisplay()
     glFlush();
 }
 
-// Handle animations.
-static void handleAnimate()
+// Handle animations, physics, etc..
+static void handleIdle()
 {
+    getProcesses();
 	glutSetWindow(mainWindow);
 	glutPostRedisplay();
 }
@@ -220,6 +232,7 @@ static void handleVisibility(int state)
 int main(int argc, char *argv[])
 {
     glutInit(&argc, argv);
+    args = std::vector<std::string>(argv + 1, argv + argc);
     // Initialize graphics.
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
     glutInitWindowPosition(0, 0);
@@ -238,13 +251,13 @@ int main(int argc, char *argv[])
     glutMotionFunc(handleMouseMotion);
     glutPassiveMotionFunc(handleMouseMotionPassive);
     glutVisibilityFunc(handleVisibility);
-    glutIdleFunc(handleAnimate);
+    glutIdleFunc(handleIdle);
     glutMouseWheelFunc(handleMouseWheel);
     glutSpecialFunc(handleSpecialKeyboard);
     // Unused callbacks.
     glutEntryFunc(nullptr);
     glutSpaceballMotionFunc(nullptr);
-	glutSpaceballRotateFunc(nullptr)
+	glutSpaceballRotateFunc(nullptr);
 	glutSpaceballButtonFunc(nullptr);
 	glutButtonBoxFunc(nullptr);
 	glutDialsFunc(nullptr);
@@ -252,7 +265,24 @@ int main(int argc, char *argv[])
 	glutTabletButtonFunc(nullptr);
 	glutMenuStateFunc(nullptr);
 	glutTimerFunc(-1, nullptr, 0);
-    
+
+    try
+    {
+        gltop::initProc();
+    }
+    catch(std::runtime_error &e)
+    {
+        // TODO
+        std::cerr << "Error: " << e.what();
+        return 1;
+    }
+
+    // Necessary because glutmainloop never returns.
+    std::atexit([]()
+    {
+        gltop::closeProc();
+    });
+
 	// Draw the scene once and wait for some interaction:
 	// (this will never return).
     glutSetWindow(mainWindow);

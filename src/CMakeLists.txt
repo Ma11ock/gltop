@@ -11,6 +11,7 @@ cmake_policy(SET CMP0075 NEW)
 set(
   GLTOP_SOURCES
   gltop.cpp
+  proc.cpp
   )
 
 set(
@@ -31,6 +32,7 @@ target_link_libraries(gltop PRIVATE GLU)
 target_link_libraries(gltop PRIVATE glut)
 target_link_libraries(gltop PRIVATE m)
 target_link_libraries(gltop PRIVATE GLEW)
+target_link_libraries(gltop PRIVATE procps)
 
 target_compile_features(gltop PRIVATE cxx_std_17)
 target_compile_features(gltop PRIVATE c_std_99)
