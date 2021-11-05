@@ -57,8 +57,9 @@ static std::vector<std::string> args;       // Argument vector.
 
 static void getProcesses()
 {
-    for(auto proc = gltop::Process::GetNextProcess(); proc;
-        proc = gltop::Process::GetNextProcess())
+    gltop::Proctab allTab;
+    for(auto proc = allTab.getNextProcess(); proc;
+        proc = allTab.getNextProcess())
     {
         auto argv = proc.getArgv();
         std::string nameStr = argv.size() ? argv[0] : "";
@@ -265,23 +266,6 @@ int main(int argc, char *argv[])
 	glutTabletButtonFunc(nullptr);
 	glutMenuStateFunc(nullptr);
 	glutTimerFunc(-1, nullptr, 0);
-
-    try
-    {
-        gltop::initProc();
-    }
-    catch(std::runtime_error &e)
-    {
-        // TODO
-        std::cerr << "Error: " << e.what();
-        return 1;
-    }
-
-    // Necessary because glutmainloop never returns.
-    std::atexit([]()
-    {
-        gltop::closeProc();
-    });
 
 	// Draw the scene once and wait for some interaction:
 	// (this will never return).

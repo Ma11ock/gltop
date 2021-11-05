@@ -16,30 +16,9 @@ extern "C" {
 
 #include "gltop.hpp"
 
-static PROCTAB *proctab = nullptr;
-static bool isInit = false;
-
-gltop::Process gltop::Process::GetNextProcess()
+gltop::Process gltop::Proctab::getNextProcess()
 {
-    return GetNextProcess(proctab);
+    // TODO search
+    return gltop::Process(mTab.get());
 }
 
-void gltop::initProc()
-{
-    isInit = true;
-    proctab = openproc(PROC_FILLMEM | PROC_FILLUSR | PROC_FILLGRP | PROC_FILLARG);
-    if(!proctab)
-        throw std::runtime_error("Could not create a proctab");
-}
-
-
-void gltop::closeProc()
-{
-    closeproc(proctab);
-}
-
-
-bool gltop::wasInit()
-{
-    return isInit;
-}

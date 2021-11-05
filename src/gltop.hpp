@@ -33,15 +33,6 @@ namespace gltop
         // Destroy process.
         ~Process() = default;
 
-        // Get the next process (all running procs).
-        static Process GetNextProcess();
-
-        // Get the next process from a proctab.
-        inline static Process GetNextProcess(PROCTAB *tab)
-        {
-            return Process(tab);
-        }
-
         // Get task id (this is the PID for the main task).
         inline int getTID() const
         {
@@ -122,14 +113,39 @@ namespace gltop
         std::shared_ptr<proc_t> mProc;
     };
 
-    // Initialize the process table.
-    void initProc();
-    // Close the process table.
-    void closeProc();
+    class Proctab
+    {
+    public:
+        Proctab()
+            : mUserName(),mProcName(),mProcsOnly(false),
+              mTab(openproc(PROC_FILLMEM | PROC_FILLUSR | PROC_FILLGRP | PROC_FILLARG),
+                   &closeproc)
 
-    // Get the initialization state. Return true if the process table
-    // was initialized, false if not.
-    bool wasInit();
+        {
+        }
+
+        Proctab(std::string_view userName, std::string_view procName,
+                bool procsOnly = false)
+            : mUserName(userName),mProcName(procName),mProcsOnly(procsOnly),
+              mTab(openproc(PROC_FILLMEM | PROC_FILLUSR | PROC_FILLGRP | PROC_FILLARG),
+                   &closeproc)
+        {
+        }
+
+        ~Proctab() = default;
+
+        Process getNextProcess();
+
+    private:
+        // User name to search for.
+        std::string mUserName;
+        // Process name to search for.
+        std::string mProcName;
+        // Check for processes only (not threads).
+        bool mProcsOnly;
+        // The PROCTAB object.
+        std::shared_ptr<PROCTAB> mTab;
+    };
 }
 
 #endif /* GLTOP_HPP */
