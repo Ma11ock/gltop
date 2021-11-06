@@ -16,8 +16,13 @@ extern "C" {
 #include <glm/glm.hpp>
 #include <cctype>
 #include <cstdlib>
+#include <chrono>
 
 #include "gltop.hpp"
+
+using namespace std::chrono_literals;
+using namespace std::string_literals;
+namespace chron = std::chrono;
 
 // Global constants.
 constexpr char WINDOW_TITLE[] = "gltop";      // Name of window.
@@ -52,10 +57,8 @@ inline auto seededMT () -> typename std::enable_if<N, T>::type
 static std::mt19937 rng = seededMT();       // RNG. 
 static int mainWindow = 0;                  // Glut window.
 static std::vector<std::string> args;       // Argument vector.
-
-// General Functions.
-
-static void getProcesses()
+static gltop::Timer animTimer(1000ms);
+static gltop::Timer procTimer(500ms, [](float)
 {
     gltop::Proctab allTab;
     for(auto proc = allTab.getNextProcess(); proc;
@@ -63,9 +66,10 @@ static void getProcesses()
     {
         auto argv = proc.getArgv();
         std::string nameStr = argv.size() ? argv[0] : "";
-        std::cout << nameStr << ' ' << proc.getTID() << '\n';
     }
-}
+});
+
+// General Functions:
 
 // Callback functions:
 
@@ -86,7 +90,8 @@ static void handleDisplay()
 // Handle animations, physics, etc..
 static void handleIdle()
 {
-    getProcesses();
+    animTimer.elapse();
+    procTimer.elapse();
 	glutSetWindow(mainWindow);
 	glutPostRedisplay();
 }
@@ -276,3 +281,4 @@ int main(int argc, char *argv[])
 	// This line is here to make the compiler happy:
     return 0;
 }
+

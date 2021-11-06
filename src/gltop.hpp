@@ -12,10 +12,67 @@ extern "C" {
 #include <memory>
 #include <vector>
 #include <string>
-#include <cstdint>
+#include <chrono>
+#include <functional>
 
 namespace gltop
 {
+    // Timer class. All values in milliseconds, represented by floats.
+    class Timer
+    {
+    public:
+        using sysClock = std::chrono::high_resolution_clock;
+        using durationRep = double;
+        using duration = std::chrono::duration<durationRep, std::milli>;
+        using timePoint = std::chrono::time_point<sysClock, duration>;
+
+        // Constant: Unix time since the process started.
+        static const inline timePoint START_TIME = sysClock::now();
+
+        // 
+        Timer(duration interval,
+              std::function<void(durationRep)> callback = nullptr)
+            : mElapsed(),mInterval(interval),mLastTime(sysClock::now()),
+              mCallback(callback)
+        {
+        }
+
+        ~Timer() = default;
+
+        // Get the elapsed time as a float.
+        inline durationRep getElapsed() const
+        {
+            return mElapsed.count();
+        }
+
+        // Do the animation. Return how many milliseconds since last call.
+        durationRep elapseAnimate();
+
+        // Call the callback only once and only if mInterval
+        // milliseconds have elapsed.
+        durationRep elapse();
+
+        // Call the callback as many times as mInterval has passed.
+        durationRep elapseAll();
+
+        static inline timePoint now()
+        {
+            return std::chrono::time_point_cast<duration>(sysClock::now());
+        }
+
+    private:
+        // The amount of elapsed time since relative to mLastTime and
+        // maxed out at mInverval.
+        duration mElapsed;
+        // mElapsed's max value. elapse() and elapseAll() will run if
+        // mElapsed exceeds mInterval.
+        duration mInterval;
+        // The last time any of the elapse() functions ran.
+        timePoint mLastTime;
+        // Callback called by the elapse() functions. Can be NULL.
+        std::function<void(durationRep)> mCallback;
+    };
+
     class Process
     {
     public:
