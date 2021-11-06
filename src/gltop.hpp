@@ -22,9 +22,10 @@ namespace gltop
     {
     public:
         using sysClock = std::chrono::high_resolution_clock;
-        using durationRep = double;
-        using duration = std::chrono::duration<durationRep, std::milli>;
-        using timePoint = std::chrono::time_point<sysClock, duration>;
+        using duration = std::chrono::milliseconds;
+        // Probably uint64_t.
+        using durationRep = duration::rep;
+        using timePoint = sysClock::time_point;
 
         // Constant: Unix time since the process started.
         static const inline timePoint START_TIME = sysClock::now();
@@ -32,7 +33,7 @@ namespace gltop
         // 
         Timer(duration interval,
               std::function<void(durationRep)> callback = nullptr)
-            : mElapsed(),mInterval(interval),mLastTime(sysClock::now()),
+            : mInterval(interval),mLastTime(sysClock::now()),
               mCallback(callback)
         {
         }
@@ -42,7 +43,7 @@ namespace gltop
         // Get the elapsed time as a float.
         inline durationRep getElapsed() const
         {
-            return mElapsed.count();
+            return (sysClock::now() - mLastTime).count();
         }
 
         // Do the animation. Return how many milliseconds since last call.
@@ -55,15 +56,21 @@ namespace gltop
         // Call the callback as many times as mInterval has passed.
         durationRep elapseAll();
 
-        static inline timePoint now()
+        float elapsedTimeToFloat() const
         {
-            return std::chrono::time_point_cast<duration>(sysClock::now());
+            namespace chron = std::chrono;
+            using dDurationRep = double;
+            using dDuration = std::chrono::duration<durationRep, std::milli>;
+            using dTimePoint = std::chrono::time_point<sysClock, duration>;
+
+            return
+                static_cast<float>
+                ((chron::time_point_cast<dDuration>(sysClock::now())
+                  - chron::time_point_cast<dDuration>(mLastTime))
+                 .count());
         }
 
     private:
-        // The amount of elapsed time since relative to mLastTime and
-        // maxed out at mInverval.
-        duration mElapsed;
         // mElapsed's max value. elapse() and elapseAll() will run if
         // mElapsed exceeds mInterval.
         duration mInterval;

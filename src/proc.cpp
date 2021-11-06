@@ -30,31 +30,31 @@ gltop::Process gltop::Proctab::getNextProcess()
 
 gltop::Timer::durationRep gltop::Timer::elapseAnimate()
 {
-    auto now = gltop::Timer::now();
-    mElapsed = (now - mLastTime);
+    auto now = sysClock::now();
+    auto elapsed = chron::duration_cast<duration>(now - mLastTime);
 
     if(mCallback)
-        mCallback(mElapsed.count());
+        mCallback(elapsed.count());
 
-    if(mElapsed > mInterval)
+    if(elapsed > mInterval)
     {
-        mElapsed = gltop::Timer::duration(0.f);
+        elapsed = gltop::Timer::duration(0);
         mLastTime = now;
     }
 
-    return mElapsed.count();
+    return elapsed.count();
 }
 
 gltop::Timer::durationRep gltop::Timer::elapse()
 {
-    auto now = gltop::Timer::now();
-    mElapsed = now - mLastTime;
-    auto result = mElapsed.count();
+    auto now = sysClock::now();
+    auto elapsed = chron::duration_cast<duration>(now - mLastTime);
+    auto result = elapsed.count();
 
-    if(mCallback && (mElapsed >= mInterval))
+    if(mCallback && (elapsed >= mInterval))
     {
-        mCallback(mElapsed.count());
-        mElapsed = gltop::Timer::duration(0.f);
+        mCallback(elapsed.count());
+        elapsed = gltop::Timer::duration(0);
         mLastTime = now;
     }
 
@@ -63,21 +63,22 @@ gltop::Timer::durationRep gltop::Timer::elapse()
 
 gltop::Timer::durationRep gltop::Timer::elapseAll()
 {
-    auto now = gltop::Timer::now();
-    mElapsed = (now - mLastTime);
-    auto result = mElapsed;
+    auto now = sysClock::now();
+    auto elapsed = chron::duration_cast<duration>(now - mLastTime);
+    auto result = elapsed;
 
-    while(mElapsed >= mInterval)
+    while(elapsed >= mInterval)
     {
         if(mCallback)
             mCallback(mInterval.count());
-        mElapsed -= mInterval;
+        elapsed -= mInterval;
     }
 
     if(result > mInterval)
     {
-        mElapsed = gltop::Timer::duration(0.f);
+        elapsed = gltop::Timer::duration(0);
         mLastTime = now;
     }
     return result.count();
 }
+
