@@ -12,11 +12,13 @@ set(
   GLTOP_SOURCES
   gltop.cpp
   proc.cpp
+  util.cpp
   )
 
 set(
   GLTOP_HEADERS
   gltop.hpp
+  util.hpp
   )
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)

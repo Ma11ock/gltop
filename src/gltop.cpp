@@ -19,6 +19,7 @@ extern "C" {
 #include <chrono>
 
 #include "gltop.hpp"
+#include "util.hpp"
 
 using namespace std::chrono_literals;
 using namespace std::string_literals;
@@ -62,7 +63,10 @@ static gltop::Timer procTimer(500ms, [](float)
 {
     gltop::Proctab allTab;
     for(auto proc = allTab.getNextProcess(); proc;
-        proc = aleStr = argv.size() ? argv[0] : "";
+        proc = allTab.getNextProcess())
+    {
+        auto argv = proc.getArgv();
+        std::string nameStr = argv.size() ? argv[0] : "";
     }
 });
 
