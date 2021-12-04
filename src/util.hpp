@@ -6,6 +6,7 @@
 #include <functional>
 #include <filesystem>
 
+// TODO FIX ELAPSEANIMATE() TO BE RELATIVE TO MLASTTIME
 namespace gltop
 {
     // Timer class. All values in milliseconds, represented by floats.
