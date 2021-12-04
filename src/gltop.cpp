@@ -59,8 +59,9 @@ static std::mt19937 rng = seededMT();       // RNG.
 static int mainWindow = 0;                  // Glut window.
 static std::vector<std::string> args;       // Argument vector.
 static gltop::Timer animTimer(1000ms);
-static gltop::Timer procTimer(500ms, [](float)
+static gltop::Timer procTimer(500ms, [](float f)
 {
+    std::cout << "Sneed " << f << '\n';
     gltop::Proctab allTab;
     for(auto proc = allTab.getNextProcess(); proc;
         proc = allTab.getNextProcess())
@@ -91,8 +92,8 @@ static void handleDisplay()
 // Handle animations, physics, etc..
 static void handleIdle()
 {
-    animTimer.elapse();
-    procTimer.elapse();
+    animTimer.elapseAnimateNormalized();
+    procTimer.elapseAnimateNormalized();
 	glutSetWindow(mainWindow);
 	glutPostRedisplay();
 }

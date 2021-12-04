@@ -1,29 +1,27 @@
 #include "util.hpp"
 
 #include <string>
-
+#include <cstdint>
 using namespace std::chrono_literals;
 using namespace std::string_literals;
 namespace chron = std::chrono;
+namespace fs = std::filesystem;
 
-gltop::Timer::durationRep gltop::Timer::elapseAnimate()
+gltop::Timer::durationRep gltop::Timer::internalElapseAnimate(float input)
 {
     auto now = sysClock::now();
     auto elapsed = chron::duration_cast<duration>(now - mLastTime);
 
     if(mCallback)
-        mCallback(elapsed.count());
+        mCallback(input);
 
     if(elapsed > mInterval)
-    {
-        elapsed = gltop::Timer::duration(0);
         mLastTime = now;
-    }
 
     return elapsed.count();
 }
 
-gltop::Timer::durationRep gltop::Timer::elapse()
+gltop::Timer::durationRep gltop::Timer::internalElapse(float input)
 {
     auto now = sysClock::now();
     auto elapsed = chron::duration_cast<duration>(now - mLastTime);
@@ -31,15 +29,14 @@ gltop::Timer::durationRep gltop::Timer::elapse()
 
     if(mCallback && (elapsed >= mInterval))
     {
-        mCallback(elapsed.count());
-        elapsed = gltop::Timer::duration(0);
+        mCallback(input);
         mLastTime = now;
     }
 
     return result;
 }
 
-gltop::Timer::durationRep gltop::Timer::elapseAll()
+gltop::Timer::durationRep gltop::Timer::internalElapseAll(float input)
 {
     auto now = sysClock::now();
     auto elapsed = chron::duration_cast<duration>(now - mLastTime);
@@ -48,14 +45,30 @@ gltop::Timer::durationRep gltop::Timer::elapseAll()
     while(elapsed >= mInterval)
     {
         if(mCallback)
-            mCallback(mInterval.count());
+            mCallback(input);
         elapsed -= mInterval;
     }
 
     if(result > mInterval)
-    {
-        elapsed = gltop::Timer::duration(0);
         mLastTime = now;
-    }
+
     return result.count();
+}
+
+
+std::vector<float> gltop::loadObjFile(const fs::path &path)
+{
+    struct vertex
+    {
+        float x;
+        float y;
+        float z;
+    };
+
+    struct normal
+    {
+        float x;
+        float y;
+        float z;
+    };
 }
