@@ -10,15 +10,17 @@ cmake_policy(SET CMP0075 NEW)
 
 set(
   GLTOP_SOURCES
-  gltop.cpp
+  main.cpp
   proc.cpp
   util.cpp
+  loadobj.cpp
   )
 
 set(
   GLTOP_HEADERS
   gltop.hpp
   util.hpp
+  loadobj.hpp
   )
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
