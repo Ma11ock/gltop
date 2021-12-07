@@ -21,7 +21,7 @@ namespace gltop
     {
     public:
         // Construct a new process (NULL).
-        Process() : mProc(nullptr, &freeproc)
+        Process() : mProc(nullptr, &freeproc),mChildren()
         {
         }
 
@@ -109,17 +109,35 @@ namespace gltop
             return !isNull();
         }
 
+        inline bool isChildOf(int pid)
+        {
+            return mProc->ppid == pid;
+        }
+
+        inline void addChild(int cpid)
+        {
+            mChildren.push_back(cpid);
+        }
+
+        inline std::vector<int> getChildrenPids() const
+        {
+            return mChildren;
+        }
+
     private:
         // The process.
         std::shared_ptr<proc_t> mProc;
+        std::vector<int> mChildren;
     };
 
     class Proctab
     {
     public:
+        static constexpr inline unsigned PROCOPEN_ARGS = PROC_FILLMEM | PROC_FILLUSR |
+            PROC_FILLGRP | PROC_FILLARG | PROC_FILLSTATUS | PROC_FILLSTAT;
         Proctab()
             : mUserName(),mProcName(),mProcsOnly(false),
-              mTab(openproc(PROC_FILLMEM | PROC_FILLUSR | PROC_FILLGRP | PROC_FILLARG),
+              mTab(openproc(PROCOPEN_ARGS),
                    &closeproc)
 
         {
@@ -128,7 +146,7 @@ namespace gltop
         Proctab(std::string_view userName, std::string_view procName,
                 bool procsOnly = false)
             : mUserName(userName),mProcName(procName),mProcsOnly(procsOnly),
-              mTab(openproc(PROC_FILLMEM | PROC_FILLUSR | PROC_FILLGRP | PROC_FILLARG),
+              mTab(openproc(PROCOPEN_ARGS),
                    &closeproc)
         {
         }
@@ -147,6 +165,7 @@ namespace gltop
         // The PROCTAB object.
         std::shared_ptr<PROCTAB> mTab;
     };
+
 }
 
 #endif /* GLTOP_HPP */

@@ -16,6 +16,8 @@ extern "C" {
 #include <limits>
 #include <tuple>
 #include <iomanip>
+#include <map>
+#include <glm/glm.hpp>
 #include "loadobj.hpp"
 
 #include "util.hpp"
@@ -265,19 +267,42 @@ int     TyrantWidth;            // Tyrant's texture width.
 int     TyrantHeight;           // Tyrant's texture height.
 GLuint  TyrantTexID;            // Tyrant's OpenGL teture ID.
 
+static std::string parentName;
+static std::map<int, gltop::Process> processes;
 
 static gltop::Timer animTimer(1000ms);
-static gltop::Timer procTimer(500ms, [](float f)
+static gltop::Timer procTimer(1000ms, [](float f)
 {
+    processes.clear();
     gltop::Proctab allTab;
     for(auto proc = allTab.getNextProcess(); proc;
         proc = allTab.getNextProcess())
+        processes[proc.getTID()] = proc;
+    // Ensure each process in processes has its children 
+    for(auto &[tid, proc] : processes)
     {
-        auto argv = proc.getArgv();
-        std::string nameStr = argv.size() ? argv[0] : "";
+        if(proc.getTID() <= 2)
+            continue;
+        auto parentIter = processes.find(proc.getPPID());
+        if(parentIter == processes.end())
+            std::cerr << "Could not find parent of tid " << proc.getTID()
+                      << " with ppid " << proc.getPPID() << '\n';
+        else
+            parentIter->second.addChild(tid);
     }
 });
 // function prototypes:
+
+// Get number of descendant processes. 
+std::size_t getNumChildrenAfter(const gltop::Process &proc)
+{
+    auto childPIDs = proc.getChildrenPids();
+    std::size_t sum = childPIDs.size();
+    for(auto i : childPIDs)
+        sum += getNumChildrenAfter(processes[i]);
+    return sum;
+}
+
 
 void	Animate( );
 void	Display( );
@@ -357,6 +382,29 @@ struct thing
 static thing cuckoo;
 static thing tomato;
 
+// Draw all the processes.
+constexpr GLfloat DZ = 35.f;
+static GLfloat dz = 0.f;
+void drawMap(GLfloat x, GLfloat y, GLfloat z, int procID = 1)
+{
+    const auto &proc = processes[procID];
+    const auto childrenPIDs = proc.getChildrenPids();
+    glPushMatrix();
+    glTranslatef(x, y, z);
+    glScalef(10.f, 10.f, 10.f);
+    cuckoo.draw();
+    glPopMatrix();
+
+    GLfloat dx = 0.f;
+    GLfloat dy = 0.f;
+    constexpr GLfloat RADIUS = 100.f;
+    for(auto i : childrenPIDs)
+        drawMap(RADIUS*glm::cos((dx += deg2rad(15.f))),
+                RADIUS*glm::sin((dy += deg2rad(15.f))),
+                z + DZ,
+                i);
+}
+
 // main program:
 
 int
@@ -410,12 +458,10 @@ using namespace std::chrono_literals;
 static gltop::Timer probTimer(36000ms);
 static gltop::Timer sickTimer(9000ms);
 
-void
-Animate( )
+void Animate()
 {
 	// put animation stuff in here -- change some global variables
 	// for Display( ) to find:
-
     animTimer.elapseAnimateNormalized();
     procTimer.elapseAnimateNormalized();
 	glutSetWindow(MainWindow);
@@ -425,7 +471,7 @@ Animate( )
 
 // draw the complete scene:
 
-void Display( )
+void Display()
 {
 
 	if( DebugOn != 0 )
@@ -533,12 +579,9 @@ void Display( )
 		glCallList( AxesList );
 	}
 
+    dz = 0.f;
+    drawMap(0.f, 0.f, 0.f);
 
-
-    glPushMatrix();
-    glScalef(10.f, 10.f, 10.f);
-    tomato.draw();
-    glPopMatrix();
 
     glTranslatef(0.f, 0.f, 0.f);
     //glCallList(TorusList);
