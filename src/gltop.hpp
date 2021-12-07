@@ -67,6 +67,11 @@ namespace gltop
         // Get the argument vector used to start the process.
         inline std::vector<std::string> getArgv() const
         {
+            if(!mProc)
+            {
+                std::cerr << "Not nproc\n";
+                return std::vector<std::string>();
+            }
             // Get the size of the argument vector.
             std::size_t argc = 0;
             auto argv = mProc->cmdline;
@@ -83,7 +88,14 @@ namespace gltop
         // Get the basename of the process.
         inline std::string getBasename() const
         {
-            return std::string(mProc->cmd);
+            if(!mProc)
+            {
+                std::cout << "Not nproc\n";
+                return "";
+            }
+            if(mProc->cmd)
+                return std::string(mProc->cmd);
+            return "";
         }
 
         // Get process group ID.

@@ -229,6 +229,7 @@ static int toematoWidth = 0;
 static int toematoHeight = 0;
 static GLuint toematoTexId = 0;
 static GLuint toematoList = 0;
+static bool drawNames = true;
 
 
 int		ActiveButton;			// current button that is down
@@ -388,14 +389,19 @@ void drawMap(GLfloat x = 0.f, GLfloat y = 0.f,
              GLfloat z = 0.f, int procID = 1)
 {
     const auto &proc = processes[procID];
+    const auto basename = proc.getBasename();
     const auto childrenPIDs = proc.getChildrenPids();
     glPushMatrix();
     glTranslatef(x, y, z);
-    glScalef(10.f, 10.f, 10.f);
     glBegin(GL_POINT);
     glVertex3f(0.f, 0.f, 0.f);
     glEnd();
     cuckoo.draw();
+
+    glRasterPos3f(x, y, z);
+    if(!basename.empty() && drawNames)
+        glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24,
+                         reinterpret_cast<const unsigned char *>(basename.c_str()));
     glPopMatrix();
 
     GLfloat dx = 0.f;
@@ -1211,6 +1217,10 @@ Keyboard(unsigned char c, int x, int y)
     case ESCAPE:
         DoMainMenu( QUIT );	// will not return here
         break;				// happy compiler
+    case 't':
+    case 'T':
+        drawNames = !drawNames;
+        break;
 
     default:
         fprintf( stderr, "Don't know what to do with keyboard hit: '%c' (0x%0x)\n", c, c );
