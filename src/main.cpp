@@ -384,14 +384,17 @@ static thing tomato;
 
 // Draw all the processes.
 constexpr GLfloat DZ = 35.f;
-static GLfloat dz = 0.f;
-void drawMap(GLfloat x, GLfloat y, GLfloat z, int procID = 1)
+void drawMap(GLfloat x = 0.f, GLfloat y = 0.f,
+             GLfloat z = 0.f, int procID = 1)
 {
     const auto &proc = processes[procID];
     const auto childrenPIDs = proc.getChildrenPids();
     glPushMatrix();
     glTranslatef(x, y, z);
     glScalef(10.f, 10.f, 10.f);
+    glBegin(GL_POINT);
+    glVertex3f(0.f, 0.f, 0.f);
+    glEnd();
     cuckoo.draw();
     glPopMatrix();
 
@@ -403,6 +406,23 @@ void drawMap(GLfloat x, GLfloat y, GLfloat z, int procID = 1)
                 RADIUS*glm::sin((dy += deg2rad(15.f))),
                 z + DZ,
                 i);
+}
+
+void drawMapPts(GLfloat x = 0.f, GLfloat y = 0.f,
+                GLfloat z = 0.f, int procID = 1)
+{
+    const auto &proc = processes[procID];
+    const auto childrenPIDs = proc.getChildrenPids();
+    glVertex3f(x, y, z);
+
+    GLfloat dx = 0.f;
+    GLfloat dy = 0.f;
+    constexpr GLfloat RADIUS = 100.f;
+    for(auto i : childrenPIDs)
+        drawMapPts(RADIUS*glm::cos((dx += deg2rad(15.f))),
+                   RADIUS*glm::sin((dy += deg2rad(15.f))),
+                   z + DZ,
+                   i);
 }
 
 // main program:
@@ -579,8 +599,13 @@ void Display()
 		glCallList( AxesList );
 	}
 
-    dz = 0.f;
-    drawMap(0.f, 0.f, 0.f);
+    drawMap();
+
+    glBegin(GL_LINE_STRIP);
+    glLineWidth(5.f);
+    glColor3f(1.f, 1.f, 1.f);
+    drawMapPts();
+    glEnd();
 
 
     glTranslatef(0.f, 0.f, 0.f);
