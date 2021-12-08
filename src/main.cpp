@@ -18,6 +18,7 @@ extern "C" {
 #include <iomanip>
 #include <map>
 #include <glm/glm.hpp>
+#include <fstream>
 #include "loadobj.hpp"
 
 #include "util.hpp"
@@ -380,6 +381,7 @@ struct thing
     }
 };
 
+static int totalMem = 0;
 static thing cuckoo;
 static thing tomato;
 
@@ -393,23 +395,27 @@ void drawMap(GLfloat x = 0.f, GLfloat y = 0.f,
     const auto childrenPIDs = proc.getChildrenPids();
     glPushMatrix();
     glTranslatef(x, y, z);
+    glRotatef(deg2rad(2.f) * (static_cast<float>(totalMem)
+                              / static_cast<float>(proc.getVMem())) *
+              glm::sin(animTimer.getElapsedNormalized() * deg2rad(360.f)),
+              0.f, 0.f, 1.f);
     glBegin(GL_POINT);
     glVertex3f(0.f, 0.f, 0.f);
     glEnd();
     cuckoo.draw();
+    glPopMatrix();
 
     glRasterPos3f(x, y, z);
     if(!basename.empty() && drawNames)
         glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24,
                          reinterpret_cast<const unsigned char *>(basename.c_str()));
-    glPopMatrix();
 
     GLfloat dx = 0.f;
     GLfloat dy = 0.f;
     constexpr GLfloat RADIUS = 100.f;
     for(auto i : childrenPIDs)
-        drawMap(RADIUS*glm::cos((dx += deg2rad(15.f))),
-                RADIUS*glm::sin((dy += deg2rad(15.f))),
+        drawMap(RADIUS * glm::cos((dx += deg2rad(15.f))),
+                RADIUS * glm::sin((dy += deg2rad(15.f))),
                 z + DZ,
                 i);
 }
@@ -619,7 +625,7 @@ void Display()
 
     //glCallList(BorgCubeList);
 
-	glDisable( GL_DEPTH_TEST );
+	glDisable(GL_DEPTH_TEST);
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity( );
 	gluOrtho2D( 0., 100.,     0., 100. );
@@ -1118,6 +1124,31 @@ void DoDoughnut(float hole2Torus, float tubeRadius)
 void
 InitLists( )
 {
+
+    std::ifstream meminfo("/proc/meminfo");
+    if(meminfo)
+    {
+        std::string r1;
+        std::string r2;
+        std::string r3;
+
+        // Read the first line of meminfo.
+        meminfo >> r1 >> r2 >> r3;
+
+        try
+        {
+            totalMem = std::stoi(r2);
+            std::cout << "System has " << totalMem << "kb of memory.\n";
+        }
+        catch(std::invalid_argument &e)
+        {
+            std::cerr << "Could not get system memory, setting to 0.\n";
+        }
+
+    }
+    else
+       std::cerr << "Could not get system memory, setting to 0.\n";
+            
 
     cuckoo.create("chicken.obj", "chicken.bmp");
     tomato.create("toemato.obj", "toemato.bmp");

@@ -61,7 +61,7 @@ namespace gltop
         // Get virtual memory usage.
         inline unsigned long getVMem() const
         {
-            return mProc->vm_size;
+            return (mProc) ? mProc->vm_size : -1;
         }
 
         // Get the argument vector used to start the process.
@@ -136,6 +136,10 @@ namespace gltop
             return mChildren;
         }
 
+        inline int getCPUTicks() const
+        {
+            return (mProc) ? mProc->pcpu : 0;
+        }
     private:
         // The process.
         std::shared_ptr<proc_t> mProc;
